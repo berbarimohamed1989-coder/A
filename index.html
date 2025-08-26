@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TECNO CARD — متجر البطاقات NFC</title>
+<meta name="description" content="متجر تيكنو كارد — بطاقات NFC ذكية مع ربط مباشر بالواتساب. توصيل لكل الولايات والدفع عند الإستلام." />
+<meta name="theme-color" content="#0b0d12" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<style>
+:root{
+  --bg:#0b0d12; --surface:#0f141c; --ink:#e6e8ee; --muted:#9aa3b2; --line:rgba(255,255,255,.08);
+  --gold:#d4af37; --accent:#22c55e;
+}
+body{margin:0;font-family:'Cairo',sans-serif;background:var(--bg);color:var(--ink)}
+.container{width:min(1000px,96vw);margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900}
+.brand .chip{background:linear-gradient(180deg,#f6e9b2,var(--gold));color:#161616;border-radius:8px;padding:6px}
+.hero{background:#11181f;padding:20px;border-radius:14px;margin-bottom:18px}
+.hero h1{margin:0;font-size:26px}
+.hero p{margin:6px 0 0;color:var(--muted)}
+.grid{display:grid;gap:20px}
+@media(min-width:900px){.grid{grid-template-columns:1.1fr .9fr}}
+.card{background:#0f1319;border-radius:14px;padding:18px;border:1px solid var(--line)}
+.price{display:flex;gap:12px;align-items:center;margin:10px 0}
+.price .now{font-size:1.6rem;font-weight:900}
+.price .was{text-decoration:line-through;color:var(--muted)}
+.variants{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.vbtn{border:1px solid var(--line);background:#10151d;color:var(--ink);padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:800}
+.vbtn.active{border-color:var(--gold);color:var(--gold)}
+.field{display:grid;gap:6px;margin-bottom:12px}
+label{font-size:.9rem;color:var(--muted)}
+input,select,textarea{padding:10px;border-radius:8px;border:1px solid var(--line);background:#10151d;color:var(--ink)}
+.qty{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.qty input{width:60px;text-align:center;border:0;background:#10151d;color:var(--ink)}
+.qty button{all:unset;width:40px;display:grid;place-items:center;cursor:pointer;background:#10151d}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:12px 16px;border-radius:10px;border:1px solid var(--line);background:#0c0f14;color:var(--ink);text-decoration:none;font-weight:900;cursor:pointer}
+.btn.primary{background:linear-gradient(180deg,#34d399,#10b981);color:#041b10;border:0}
+.summary{border:1px solid var(--line);border-radius:12px;margin-top:16px}
+.summary h3{margin:0;padding:12px;background:#0d1118;border-bottom:1px solid var(--line);font-size:1rem}
+.summary .rowx{display:flex;justify-content:space-between;padding:10px 14px;border-top:1px dashed var(--line)}
+.summary .total{font-weight:900}
+.toast{position:fixed;inset-inline:50%;bottom:20px;transform:translateX(-50%);background:#11161e;padding:10px 14px;border-radius:10px;color:var(--ink);opacity:0;transition:.3s}
+.toast.show{opacity:1}
+.footer{text-align:center;color:var(--muted);padding:18px 0;font-size:.9rem}
+.badge{display:inline-flex;align-items:center;gap:.4rem;font-weight:800;color:#161616;background:linear-gradient(180deg,#f6e9b2,var(--gold));padding:.28rem .6rem;border-radius:999px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand"><span class="chip"><i class="fa-solid fa-microchip"></i></span> TECNO CARD</div>
+      <a class="btn primary" id="waHeader" href="#" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> تواصل واتساب</a>
+    </header>
+
+    <section class="hero">
+      <h1>بطاقة NFC ذكية — لمسة واحدة تكفي!</h1>
+      <p>معلوماتك تظهر بثانية: رقمك، واتساب، فيسبوك… تصميم احترافي + شحن مع ياليدين.</p>
+    </section>
+
+    <main class="grid">
+      <section class="card" id="product">
+        <span class="badge">عرض خاص -16%</span>
+        <div class="price"><span class="now" id="pNow">4200 DA</span><span class="was" id="pWas">5000 DA</span></div>
+        <div class="variants" id="variants"></div>
+
+        <form id="orderForm" onsubmit="return false">
+          <div class="field"><label for="fname">الإسم الكامل</label><input id="fname" required></div>
+          <div class="field"><label for="phone">الهاتف</label><input id="phone" inputmode="tel" required></div>
+
+          <div class="field">
+            <label for="wilaya">الولاية</label>
+            <select id="wilaya"><option value="">اختر الولاية</option></select>
+          </div>
+
+          <div class="field">
+            <label for="commune">البلدية</label>
+            <select id="commune" disabled><option>اختر الولاية أولا</option></select>
+          </div>
+
+          <div class="field">
+            <label>الكمية</label>
+            <div class="qty"><button type="button" id="minus">-</button><input id="qty" value="1" inputmode="numeric" pattern="[0-9]*"><button type="button" id="plus">+</button></div>
+          </div>
+
+          <div class="field"><label for="note">ملاحظة</label><textarea id="note" placeholder="مثال: لون أسود/ذهبي مع كتابة الاسم بالعربية"></textarea></div>
+
+          <div class="summary" aria-label="ملخص الطلب">
+            <h3>ملخص الطلب</h3>
+            <div class="rowx"><span><span id="sQty">1</span> × <span id="sVar">—</span></span><span id="sCard">— DA</span></div>
+            <div class="rowx"><span>الشحن (ياليدين)</span><span id="sShip">— DA</span></div>
+            <div class="rowx total"><span>الإجمالي</span><span id="sTotal">— DA</span></div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" id="confirmBtn" type="button"><i class="fa-solid fa-check"></i> تأكيد الطلب</button>
+            <button class="btn" id="exportBtn" type="button"><i class="fa-solid fa-file-excel"></i> تنزيل Excel (CSV)</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <div class="footer">© <span id="year"></span> TECNO CARD — الدفع عند الإستلام • شحن مع ياليدين</div>
+  </div>
+
+  <div class="toast" id="toast">تم النسخ ✅</div>
+
+<script>
+  // بيانات أساسية
+  const data = {
+    whatsapp: "213770984554",
+    variants: [
+      { id: "STD",  name: "ستاندارد",           price: 3500, final: 2800 },
+      { id: "CUST", name: "مخصصة (بشعارك)",     price: 5000, final: 4200 }
+    ],
+    // أسعار شحن نموذجية — زِد باقي الولايات لاحقًا أو استوردها من ملفك
+    wilayas: [
+      { id: 16, name: "الجزائر", ship: 500 },
+      { id: 19, name: "سطيف",    ship: 500 }
+    ]
+  };
+
+  // ملف البلديات (ضعه بجانب الصفحة)
+  // يدعم شكلين:
+  // 1) كائن: {"16": ["الجزائر الوسطى","باب الزوار", ...], "19": ["سطيف","العلمة", ...]}
+  // 2) مصفوفة كائنات: [{name:"الجزائر الوسطى", wilaya_id:16}, ...]
+  const COMMUNES_URL = "wilaya_communes.json";
+
+  // أدوات
+  const $ = s => document.querySelector(s);
+  const fmt = n => new Intl.NumberFormat("fr-DZ").format(n);
+
+  $("#year").textContent = new Date().getFullYear();
+  $("#waHeader").href = `https://wa.me/${data.whatsapp}`;
+
+  // المتغيرات (خيارات المنتج)
+  let selected = data.variants[1];
+  function renderVariants(){
+    $("#variants").innerHTML = "";
+    data.variants.forEach(v=>{
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "vbtn" + (v.id===selected.id ? " active":"");
+      b.textContent = v.name;
+      b.onclick = ()=>{ selected=v; updatePrices(); renderVariants(); };
+      $("#variants").appendChild(b);
+    });
+    $("#sVar").textContent = selected.name;
+  }
+  function updatePrices(){
+    $("#pNow").textContent = fmt(selected.final) + " DA";
+    $("#pWas").textContent = fmt(selected.price) + " DA";
+    updateSummary();
+  }
+  renderVariants(); updatePrices();
+
+  // تعبئة الولايات
+  data.wilayas.forEach(w=>{
+    const o = new Option(w.name, w.id);
+    o.dataset.ship = w.ship;
+    $("#wilaya").add(o);
+  });
+
+  // البلديات: تحميل من الملف ثم تعبئة حسب الولاية
+  let communesIndex = {};
+  async function loadCommunes(){
+    try{
+      const res = await fetch(COMMUNES_URL);
+      const json = await res.json();
+      if(Array.isArray(json)){
+        communesIndex = json.reduce((acc,c)=>{
+          const wid = String(c.wilaya_id || c.wilaya || c.w || "");
+          if(!acc[wid]) acc[wid]=[];
+          acc[wid].push(c.name || c.commune || c.label);
+          return acc;
+        },{});
+      }else{
+        communesIndex = json;
+      }
+    }catch(e){
+      communesIndex = {};
+    }
+  }
+  function fillCommunes(wid){
+    const sel = $("#commune");
+    sel.innerHTML = "";
+    const list = communesIndex[String(wid)] || [];
+    if(!wid){
+      sel.disabled = true;
+      sel.innerHTML = "<option>اختر الولاية أولا</option>";
+      return;
+    }
+    if(!list.length){
+      sel.disabled = true;
+      sel.innerHTML = "<option>لا توجد بلديات — تأكد من الملف</option>";
+      return;
+    }
+    sel.add(new Option("اختر البلدية",""));
+    list.forEach(n => sel.add(new Option(n, n)));
+    sel.disabled = false;
+  }
+  loadCommunes();
+
+  $("#wilaya").onchange = ()=>{
+    fillCommunes($("#wilaya").value);
+    updateSummary();
+  };
+
+  // الكمية
+  function setQty(v){ v = Math.max(1, parseInt(v||"1",10)||1); $("#qty").value=v; updateSummary(); }
+  $("#minus").onclick = ()=> setQty(+$("#qty").value - 1);
+  $("#plus").onclick  = ()=> setQty(+$("#qty").value + 1);
+  $("#qty").oninput   = ()=> setQty($("#qty").value);
+
+  // الملخص
+  function updateSummary(){
+    const q = +$("#qty").value || 1;
+    const card = selected.final * q;
+    const ship = (+$("#wilaya").selectedOptions[0]?.dataset.ship || 0);
+    $("#sQty").textContent = q;
+    $("#sCard").textContent = fmt(card) + " DA";
+    $("#sShip").textContent = ship ? fmt(ship) + " DA" : "— DA";
+    $("#sTotal").textContent = fmt(card + ship) + " DA";
+  }
+
+  // إدارة الطلبيات (LocalStorage)
+  const ORDERS_KEY = "tecno_card_orders";
+  const loadOrders = ()=>{ try{ return JSON.parse(localStorage.getItem(ORDERS_KEY)||"[]"); }catch{ return []; } };
+  const saveOrders = arr => localStorage.setItem(ORDERS_KEY, JSON.stringify(arr));
+  const getWilayaText  = ()=> $("#wilaya").selectedOptions[0]?.text || "";
+  const getCommuneText = ()=> $("#commune").value || "";
+
+  // تأكيد الطلب: تحقّق + حفظ + واتساب
+  $("#confirmBtn").onclick = ()=>{
+    if(!$("#fname").value.trim()){ alert("من فضلك أدخل الإسم الكامل"); return; }
+    if(!$("#phone").value.trim()){ alert("من فضلك أدخل رقم الهاتف"); return; }
+    if(!$("#wilaya").value){ alert("اختر الولاية"); return; }
+    if($("#commune").disabled || !$("#commune").value){ alert("اختر البلدية"); return; }
+
+    const q = +$("#qty").value || 1;
+    const card = selected.final * q;
+    const ship = (+$("#wilaya").selectedOptions[0]?.dataset.ship || 0);
+    const total = card + ship;
+
+    const order = {
+      timestamp: new Date().toISOString(),
+      variant_id: selected.id,
+      variant_name: selected.name,
+      quantity: q,
+      price_unit: selected.final,
+      price_subtotal: card,
+      shipping_company: "Yalidine",
+      shipping_price: ship,
+      total: total,
+      name: $("#fname").value.trim(),
+      phone: $("#phone").value.trim(),
+      wilaya_code: $("#wilaya").value,
+      wilaya_name: getWilayaText(),
+      commune: getCommuneText(),
+      note: $("#note").value.trim()
+    };
+    const arr = loadOrders(); arr.push(order); saveOrders(arr);
+
+    const f = n => new Intl.NumberFormat("fr-DZ").format(n);
+    const msg =
+`طلب جديد:
+المنتج: ${order.variant_name}
+الكمية: ${order.quantity}
+المجموع: ${f(card)} DA
+الشحن (Yalidine): ${ship ? f(ship)+' DA' : '—'}
+الإجمالي: ${f(total)} DA
+الولاية: ${order.wilaya_name}
+البلدية: ${order.commune}
+الإسم: ${order.name}
+الهاتف: ${order.phone}
+ملاحظة: ${order.note}`;
+
+    window.open(`https://wa.me/${data.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank');
+  };
+
+  // تصدير CSV لملف Excel
+  function exportCSV(){
+    const rows = loadOrders();
+    if(!rows.length){ alert("لا توجد طلبيات بعد."); return; }
+    const headers = [
+      "timestamp","variant_id","variant_name","quantity","price_unit","price_subtotal",
+      "shipping_company","shipping_price","total","name","phone","wilaya_code","wilaya_name","commune","note"
+    ];
+    const esc = v => (""+(v??"")).replace(/"/g,'""');
+    const csv = [headers.join(",")].concat(
+      rows.map(r => headers.map(h => `"${esc(r[h])}"`).join(","))
+    ).join("\n");
+    const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "orders_"+new Date().toISOString().slice(0,10)+".csv";
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
+  }
+  $("#exportBtn").onclick = exportCSV;
+</script>
+</body>
+</html>
